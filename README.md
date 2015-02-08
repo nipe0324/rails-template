@@ -10,5 +10,6 @@
 Create rails project with some settings and useful gems.
 
 ```
-$ rails new [your app name] -m https://raw.githubusercontent.com/yanagi0324/rails-template/master/template.rb
+$ git clone git@github.com:yanagi0324/rails-template.git
+$ rails new [your_app_name] -m ./rails-template/template.rb
 ```

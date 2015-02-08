@@ -1,13 +1,19 @@
-repo_url = 'https://raw.githubusercontent.com/yanagi0324/rails-template/master'
+# ソースファイルのパスを設定
+def source_paths
+  [File.expand_path(File.dirname(__FILE__))]
+end
+
+# Railsのバージョン確認
+unless `rails -v`.include?("Rails 4.2")
+  puts "設定ファイルはRails 4.2をベースに作られているので、設定内容がデグレする可能性があります"
+  exit
+end
 
 # 1. Railsプロジェクトの作成
 # rspecを使うので、testディレクトリを削除
 run 'rm -rf test'
 # 不必要なファイルを削除
 run "rm README.rdoc"
-# .gitignoreをGitHubのmasterから取得して置き換える
-remove_file '.gitignore'
-get "#{repo_url}/gitignore", '.gitignore'
 
 # 2. Gitにプロジェクトを登録
 git :init
@@ -30,15 +36,6 @@ gem_group :development do
   # 保守性を上げる
   gem 'rubocop', require: false          # コーディング規約の自動チェック
 end
-
-
-# # guard
-# gem 'guard'
-# gem 'guard-rspec'
-# gem 'guard-bundler'
-# gem 'guard-rubocop'
-# gem 'shoulda-matchers'
-# end
 
 gem_group :development, :test do
   # pry関連(デバッグなど便利)
@@ -81,7 +78,9 @@ run 'bundle install'
 # /usr/local/bin/qmake  # 何か出力されればインストールされていること
 
 # 3.2. jquery-turbolinksの設定
-# todo
+run 'rm app/assets/javascripts/application.js'
+copy_file 'files/application.js', 'app/assets/javascripts/application.js'
+
 
 # 3.3. 開発を効率化する関連gemの設定
 # gurard-livereloadのGuardfileを作成
@@ -92,29 +91,33 @@ run 'bin/spring stop'
 run 'spring binstub --all'
 
 # bulletを有効にする
-# todo
+run 'rm config/environments/development.rb'
+copy_file 'files/development.rb', 'config/environments/development.rb'
 
 # 3.5. 表示整形関連(ログなどを見やすくする)
-# todo .pryrc
+copy_file 'files/.pryrc', '.pryrc'
 
 # 3.6. テスト関連
-run 'bin/rails g rspec:install'
-# todo spec/rails_helper.rb
-# todo spec/support/factory_girl.rb
-# todo bin/rspec-queue
-# todo chmod 744 bin/rspec-queue
-# todo config/database.yml
-
+generate 'rspec:install'
+run 'rm spec/rails_helper.rb'
+copy_file 'files/rails_helper.rb', 'spec/rails_helper.rb'
+FileUtils.mkdir_p 'spec/support'
+copy_file 'files/factory_girl.rb', 'spec/support/factory_girl.rb'
+copy_file 'files/rspec-queue.rb', 'bin/rspec-queue'
+run 'chmod 744 bin/rspec-queue'
+run 'rm config/database.yml'
+copy_file 'files/database.yml', 'config/database.yml'
 
 # 4. 言語設定 / 5. タイムゾーン
-# todo config/application.rb (default_locale, time_zone)
+run 'rm config/application.rb'
+copy_file 'files/application.rb', 'config/application.rb'
+copy_file 'files/ja.yml', 'config/locales/ja.yml'
 
 
 # その他、必要に応じて
 gem 'kaminari' # pagination
 gem 'devise'   # Authentication
 gem 'ransack'  # Search
-# todo my styling
 
 gem_group :production do
   gem 'mysql2'
@@ -130,10 +133,30 @@ if yes? 'use devise?'
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: 'development'
   generate 'controller Home index'
   route "root 'home#index'"
-  # todo devise.ja.yml
+  copy_file 'files/devise.ja.yml', 'config/locales/devise.ja.yml'
 
   model_name = ask("What would you like the user model to be called? [user]")
   model_name = "user" if model_name.blank?
   generate "devise", model_name
   rake 'db:migrate'
+end
+
+# オリジナルの簡易のスタイリング
+if yes? 'use styling?'
+  copy_file 'files/common.css.scss', 'app/assets/stylesheets/common.css.scss'
+  styling = true
+end
+
+after_bundle do
+  if styling
+    puts "* Add below to 'application.html.erb'"
+    puts ""
+    puts '<body class=\'<%= "#{controller.controller_name}" %>\'>'
+    puts '<div id="wrap">'
+    puts '  <div id="main">'
+    puts '    <%= yield %>'
+    puts '  </div>'
+    puts '</div>'
+    puts '</body>'
+  end
 end
