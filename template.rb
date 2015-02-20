@@ -16,9 +16,9 @@ run 'rm -rf test'
 run "rm README.rdoc"
 
 # 2. Gitにプロジェクトを登録
-git :init
-git add: '.'
-git commit: %Q{ -m 'initial commit' }
+#git :init
+#git add: '.'
+#git commit: %Q{ -m 'initial commit' }
 
 
 # 3. 開発を効率化させるGemをがっつり導入
@@ -142,15 +142,21 @@ if yes? 'use devise?'
 end
 
 # オリジナルの簡易のスタイリング
-if yes? 'use styling?'
+if yes? 'use styling with bootstrap3?'
   copy_file 'files/common.css.scss', 'app/assets/stylesheets/common.css.scss'
   styling = true
 end
 
 after_bundle do
   if styling
-    puts "* Add below to 'application.html.erb'"
     puts ""
+    puts "* Add below to 'application.html.erb'"
+    puts "  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>"
+    puts "  <link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css\">"
+    puts "  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>"
+    puts "  <script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js\"></script>"
+    puts '  <%= csrf_meta_tags %>'
+    puts '</head>'
     puts '<body class=\'<%= "#{controller.controller_name}" %>\'>'
     puts '<div id="wrap">'
     puts '  <div id="main">'
